@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 prometheus = "0.7"
 toml = "0.5"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }

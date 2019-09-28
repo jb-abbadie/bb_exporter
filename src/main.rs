@@ -3,12 +3,28 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
+use serde::Deserialize;
+use toml;
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    server: ServerConfig,
+}
+
+#[derive(Debug, Deserialize)]
+struct ServerConfig {
+    port: u16,
+}
+
+
 fn main() {
-    println!("test");
-    println!("Hello, world!");
 
     let data = load_file("test.toml".to_string());
-    println!("{}", data);
+
+    let decoded: Config = toml::from_str(&data).unwrap();
+
+    println!("{:?}", decoded);
+    println!("Port: {}", decoded.server.port);
 }
 
 fn load_file(file_name: String) -> String {
@@ -24,7 +40,7 @@ fn load_file(file_name: String) -> String {
     match file.read_to_string(&mut s) {
         Err(why) => panic!("couldn't read {}: {}", display,
                            why.description()),
-        Ok(_) => print!("{} contains:\n{}", display, s),
+        Ok(_) => (),
     }
 
     s

@@ -1,2 +1,2 @@
-[hello]
-popo = "test"
+[server]
+port = 8080
