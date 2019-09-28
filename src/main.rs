@@ -6,6 +6,8 @@ use std::path::Path;
 use serde::Deserialize;
 use toml;
 
+use prometheus::{Opts, Counter, Registry, Encoder, TextEncoder};
+
 #[derive(Debug, Deserialize)]
 struct Config {
     server: ServerConfig,
@@ -18,12 +20,25 @@ struct ServerConfig {
 
 
 fn main() {
-
     let data = load_file("test.toml".to_string());
-
     let decoded: Config = toml::from_str(&data).unwrap();
 
-    println!("{:?}", decoded);
+    let a = setup_prom();
+    let mut buffer = Vec::new();
+
+    let r = Registry::new();
+    r.register(Box::new(a.clone())).unwrap();
+
+
+    let encoder = TextEncoder::new();
+    let metric_families = r.gather();
+
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+    let output = String::from_utf8(buffer.clone()).unwrap();
+
+
+
+    println!("{}", output);
     println!("Port: {}", decoded.server.port);
 }
 
@@ -37,11 +52,16 @@ fn load_file(file_name: String) -> String {
     };
 
     let mut s = String::new();
-    match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read {}: {}", display,
-                           why.description()),
-        Ok(_) => (),
-    }
+    file.read_to_string(&mut s).unwrap();
 
     s
+}
+
+fn setup_prom() -> Counter {
+    let counter_opts = Opts::new("test_counter", "test counter help");
+    let counter = Counter::with_opts(counter_opts).unwrap();
+
+    counter.inc();
+
+    counter
 }
